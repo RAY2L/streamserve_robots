@@ -1,0 +1,25 @@
+<launch>
+    <!-- Load the Gazebo world -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch"/>
+
+    <!-- Spawn first TurtleBot3 -->
+    <group ns="tb3_0">
+        <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find turtlebot3_simulations)/urdf/turtlebot3_waffle_modified.urdf.xacro'" />
+        <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_0 -x 0 -y 2 -z 0 -param robot_description" />
+    </group>
+
+    <!-- Random Measurement Generator for tb3_0 -->
+    <node name="random_measurement_publisher_tb3_0" pkg="inter_robot_communication" type="random_measurement_pub.py" args="tb3_0" />
+
+    <!-- Spawn second TurtleBot3 -->
+    <group ns="tb3_1">
+        <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find turtlebot3_simulations)/urdf/turtlebot3_waffle_modified.urdf.xacro'" />
+        <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_1 -x 0 -y -2 -z 0 -param robot_description" />
+    </group>
+
+    <!-- Random Measurement Generator for tb3_1 -->
+    <node name="random_measurement_publisher_tb3_1" pkg="inter_robot_communication" type="random_measurement_pub.py" args="tb3_1" />
+
+    <!-- Inter-Robot Communication Node -->
+    <node name="inter_robot_communication" pkg="inter_robot_communication" type="random_measurement_sub.py" />
+</launch>
