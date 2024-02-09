@@ -3,61 +3,39 @@ import rospy
 from inter_robot_communication.msg import MeasurementStamped
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+import sys
 
 # Store timestamps (as float) and latencies
-latencies_tb3_0 = []
-latencies_tb3_1 = []
+latencies = []
 
 
-def callback_tb3_0(data):
+def callback(data):
     current_time = rospy.Time.now().to_sec()
     sent_time = data.header.stamp.to_sec()
     latency = current_time - sent_time
 
-    latencies_tb3_0.append(latency)
-    rospy.loginfo("TB3_0 Latency: {:.3f} seconds".format(latency))
-
-
-def callback_tb3_1(data):
-    current_time = rospy.Time.now().to_sec()
-    sent_time = data.header.stamp.to_sec()
-    latency = current_time - sent_time
-
-    latencies_tb3_1.append(latency)
-    rospy.loginfo("TB3_1 Latency: {:.3f} seconds".format(latency))
+    latencies.append(latency)
+    rospy.loginfo("Latency: {:.3f} seconds".format(latency))
 
 
 def update_plot(frame):
     plt.cla()
-    if latencies_tb3_0:
-        plt.plot(latencies_tb3_0, label="TB3_0 Latency")
-    if latencies_tb3_1:
-        plt.plot(latencies_tb3_1, label="TB3_1 Latency")
+    if latencies:
+        plt.plot(latencies, label="Latency")
 
     # Average latencies
-    avg_latency_tb3_0 = (
-        sum(latencies_tb3_0) / len(latencies_tb3_0) if latencies_tb3_0 else 0
-    )
-    avg_latency_tb3_1 = (
-        sum(latencies_tb3_1) / len(latencies_tb3_1) if latencies_tb3_1 else 0
+    avg_latency = (
+        sum(latencies) / len(latencies) if latencies else 0
     )
 
     # Annotate the plot with average latency values
     plt.text(
         0.5,
         0.95,
-        f"Average Latency TB3_0: {avg_latency_tb3_0:.6f} seconds",
+        f"Average Latency: {avg_latency:.6f} seconds",
         transform=plt.gca().transAxes,
         ha="center",
         color="blue",
-    )
-    plt.text(
-        0.5,
-        0.90,
-        f"Average Latency TB3_1: {avg_latency_tb3_1:.6f} seconds",
-        transform=plt.gca().transAxes,
-        ha="center",
-        color="orange",
     )
 
     plt.xlabel("Message Count")
@@ -66,10 +44,8 @@ def update_plot(frame):
     plt.legend()
 
 
-def listener():
-    rospy.init_node("tb3_listener", anonymous=True)
-    rospy.Subscriber("/tb3_0/random_measurement", MeasurementStamped, callback_tb3_0)
-    rospy.Subscriber("/tb3_1/random_measurement", MeasurementStamped, callback_tb3_1)
+def listener(other_namespace):
+    rospy.Subscriber(f"/{other_namespace}/random_measurement", MeasurementStamped, callback)
 
     plt.ion()
     # real-time rendering of communication latency graph
@@ -81,4 +57,10 @@ def listener():
 
 
 if __name__ == "__main__":
-    listener()
+    try:
+        other_namespace = rospy.myargv(argv=sys.argv)[1]
+        listener(other_namespace)
+    except rospy.ROSInterruptException:
+        pass
+    except IndexError:
+        rospy.logerr("Usage: random_measurement_pub.py robot_namespace")
