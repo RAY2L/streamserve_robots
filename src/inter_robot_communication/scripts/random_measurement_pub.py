@@ -74,12 +74,17 @@ def update_plot(frame, robot_namespace):
         plt.legend()
         plt.tight_layout()
 
-        # Calculate and display the average latency of the last 50 data points
-        if len(latencies) > 50:
-            avg_latency = sum(latencies[-50:]) / 50
-        else:
-            avg_latency = sum(latencies) / len(latencies)
-        plt.figtext(0.15, 0.85, f'Avg Latency (last 50): {avg_latency:.3f} s', fontsize=9, bbox={"facecolor": "white", "alpha": 0.5, "pad": 5})
+        # Use numpy to calculate statistics for more efficiency, especially with large datasets
+        latencies_array = np.array(latencies[-50:])  # Consider only the last 50 measurements for real-time analysis
+
+        avg_latency = np.mean(latencies_array)
+        med_latency = np.median(latencies_array)
+        min_latency = np.min(latencies_array)
+        max_latency = np.max(latencies_array)
+        std_dev_latency = np.std(latencies_array)
+
+        # Display the statistics on the plot
+        plt.figtext(0.15, 0.85, f'Avg Latency: {avg_latency:.3f} s\nMed Latency: {med_latency:.3f} s\nMin Latency: {min_latency:.3f} s\nMax Latency: {max_latency:.3f} s\nStd Dev: {std_dev_latency:.3f} s', fontsize=9, bbox={"facecolor": "white", "alpha": 0.5, "pad": 5})
 
 def start_plotting(robot_namespace):
     plt.figure()
