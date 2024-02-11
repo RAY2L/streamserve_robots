@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import rospy
+from sensor_msgs.msg import Image
 from inter_robot_communication.msg import MeasurementStamped
-import random
+import numpy as np
 import sys
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
@@ -14,7 +15,7 @@ latencies = []
 
 # Callback function for the subscriber
 def measurement_callback(msg, robot_namespace):
-    rospy.loginfo(f"{robot_namespace} Received measurement: {msg.measurement} at Time: {msg.header.stamp.to_sec()}")
+    rospy.loginfo(f"{robot_namespace} Received measurement at Time: {msg.header.stamp.to_sec()}")
     # Append data to global lists
     time_stamps.append(msg.header.stamp.to_sec())
     current_time = rospy.Time.now().to_sec()
@@ -28,23 +29,35 @@ def random_measurement_publisher(robot_namespace):
     rospy.init_node("random_measurement_publisher", anonymous=True)
     
     # Publisher for measurements
-    pub = rospy.Publisher("random_measurement", MeasurementStamped, queue_size=10)
+    pub = rospy.Publisher("random_measurement", Image, queue_size=10)
     
     # Determine the other robot's namespace
     other_robot_namespace = "tb3_0" if robot_namespace == "tb3_1" else "tb3_1"
     
     # Subscriber for the other robot's measurements
-    rospy.Subscriber(f"/{other_robot_namespace}/random_measurement", MeasurementStamped, measurement_callback, robot_namespace)
+    rospy.Subscriber(f"/{other_robot_namespace}/random_measurement", Image, measurement_callback, robot_namespace)
 
     rate = rospy.Rate(1)  # 1 Hz
 
     while not rospy.is_shutdown():
-        msg = MeasurementStamped()
-        msg.measurement = random.random()
+        # Define bitmap dimensions
+        width, height = 10, 10
+        
+        # Generate a random bitmap as a numpy array
+        bitmap = np.random.choice([0, 255], size=(height, width), p=[0.5, 0.5]).astype(np.uint8)
+        
+        # Create the Image message
+        msg = Image()
         msg.header.stamp = rospy.Time.now()
+        msg.height = height
+        msg.width = width
+        msg.encoding = "mono8"
+        msg.is_bigendian = 0
+        msg.step = width
+        msg.data = bitmap.tostring()
         pub.publish(msg)
 
-        rospy.loginfo(f"{robot_namespace} Publishing: {msg.measurement} at Time: {msg.header.stamp.to_sec()}")
+        rospy.loginfo(f"{robot_namespace} Published an image at Time: {msg.header.stamp.to_sec()}")
 
         rate.sleep()
 
