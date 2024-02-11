@@ -41,7 +41,7 @@ def random_measurement_publisher(robot_namespace):
 
     while not rospy.is_shutdown():
         # Define bitmap dimensions
-        width, height = 10, 10
+        width, height = 20, 20
         
         # Generate a random bitmap as a numpy array
         bitmap = np.random.choice([0, 255], size=(height, width), p=[0.5, 0.5]).astype(np.uint8)

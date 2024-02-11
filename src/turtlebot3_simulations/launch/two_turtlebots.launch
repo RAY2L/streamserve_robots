@@ -9,7 +9,7 @@
     <group ns="tb3_0">
         <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find turtlebot3_simulations)/urdf/turtlebot3_waffle_modified.urdf.xacro'" />
         <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_0 -x 0 -y 2 -z 0 -param robot_description" />
-        <!-- Random Measurement Generator for tb3_0, now also subscribing to tb3_1's measurements -->
+        <!-- Generating random data for tb3_0, now also subscribing to tb3_1's measurements -->
         <node name="random_measurement_publisher" pkg="inter_robot_communication" type="random_measurement_pub.py" args="tb3_0" />
     </group>
     
@@ -17,7 +17,7 @@
     <group ns="tb3_1">
         <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find turtlebot3_simulations)/urdf/turtlebot3_waffle_modified.urdf.xacro'" />
         <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_1 -x 0 -y -2 -z 0 -param robot_description" />
-        <!-- Random Measurement Generator for tb3_1, now also subscribing to tb3_0's measurements -->
+        <!-- Generating random data for tb3_1, now also subscribing to tb3_0's measurements -->
         <node name="random_measurement_publisher" pkg="inter_robot_communication" type="random_measurement_pub.py" args="tb3_1" />
     </group>
 </launch>
