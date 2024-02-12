@@ -12,6 +12,7 @@ import threading
 # store timestamps (for plotting) and latencies (for latency calculations)
 time_stamps = []
 latencies = []
+robot_namespaces = set(["tb3_0", "tb3_1", "tb3_2"])
 
 # Callback function for the subscriber
 def measurement_callback(msg, robot_namespace):
@@ -31,8 +32,15 @@ def random_measurement_publisher(robot_namespace):
     # Publisher for measurements
     pub = rospy.Publisher("random_measurement", MeasurementStamped, queue_size=10)
     
-    # Determine the other robot's namespace
-    other_robot_namespace = "tb3_0" if robot_namespace == "tb3_1" else "tb3_1"
+    # # Determine the other robot's namespace
+    # other_robot_namespace = "tb3_0" if robot_namespace == "tb3_1" else "tb3_1"
+
+    other_robot_namespaces = robot_namespaces.copy()
+    other_robot_namespaces.remove(robot_namespace)
+
+    for other_robot_namespace in other_robot_namespaces:
+        # Subscriber for the other robot's measurements
+        rospy.Subscriber(f"/{other_robot_namespace}/random_measurement", MeasurementStamped, measurement_callback, robot_namespace)
     
     # Subscriber for the other robot's measurements
     rospy.Subscriber(f"/{other_robot_namespace}/random_measurement", MeasurementStamped, measurement_callback, robot_namespace)
