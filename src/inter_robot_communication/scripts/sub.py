@@ -45,7 +45,7 @@ def update_plot(frame):
 
 
 def listener(other_namespace):
-    rospy.Subscriber(f"/{other_namespace}/random_measurement", MeasurementStamped, callback)
+    rospy.Subscriber(f"/{other_namespace}/data", MeasurementStamped, callback)
 
     plt.ion()
     # real-time rendering of communication latency graph
@@ -63,4 +63,4 @@ if __name__ == "__main__":
     except rospy.ROSInterruptException:
         pass
     except IndexError:
-        rospy.logerr("Usage: random_measurement_pub.py robot_namespace")
+        rospy.logerr("Usage: pub.py robot_namespace")

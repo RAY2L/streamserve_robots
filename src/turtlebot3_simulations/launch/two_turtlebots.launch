@@ -9,23 +9,15 @@
     <group ns="tb3_0">
         <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find turtlebot3_simulations)/urdf/turtlebot3_waffle_modified.urdf.xacro'" />
         <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_0 -x 0 -y 2 -z 0 -param robot_description" />
-        <!-- Generating random data for tb3_0, now also subscribing to [tb3_1, tb3_2]'s measurements -->
-        <node name="random_measurement_publisher" pkg="inter_robot_communication" type="random_measurement_pub.py" args="tb3_0" />
+        <!-- Generating random data for tb3_0, now also subscribing to tb3_1's measurements -->
+        <node name="pub" pkg="inter_robot_communication" type="pub.py" args="tb3_0" />
     </group>
     
     <!-- Spawn second TurtleBot3 (tb3_1) -->
     <group ns="tb3_1">
         <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find turtlebot3_simulations)/urdf/turtlebot3_waffle_modified.urdf.xacro'" />
         <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_1 -x 0 -y -2 -z 0 -param robot_description" />
-        <!-- Generating random data for tb3_1, now also subscribing to [tb3_0, tb3_2]'s measurements -->
-        <node name="random_measurement_publisher" pkg="inter_robot_communication" type="random_measurement_pub.py" args="tb3_1" />
-    </group>
-    
-    <!-- Spawn third TurtleBot3 (tb3_2) -->
-    <group ns="tb3_2">
-        <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find turtlebot3_simulations)/urdf/turtlebot3_waffle_modified.urdf.xacro'" />
-        <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_2 -x 0 -y 0 -z 0 -param robot_description" />
-        <!-- Generating random data for tb3_2, now also subscribing to [tb3_0, tb3_1]'s measurements -->
-        <node name="random_measurement_publisher" pkg="inter_robot_communication" type="random_measurement_pub.py" args="tb3_2" />
+        <!-- Generating random data for tb3_1, now also subscribing to tb3_0's measurements -->
+        <node name="pub" pkg="inter_robot_communication" type="pub.py" args="tb3_1" />
     </group>
 </launch>
