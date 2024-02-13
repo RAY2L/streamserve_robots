@@ -1,90 +1,90 @@
 #!/usr/bin/env python3
 
+import sys
+import uuid
+
+from log import log_data
+
 import rospy
+from inter_robot_communication.msg import ImageUUID
 from sensor_msgs.msg import Image
 import numpy as np
-import sys
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-import threading
 
-# Store timestamps (for plotting) and latencies (for latency calculations)
-time_stamps = []
-latencies = []
 
-# Callback function for the subscriber
-def measurement_callback(msg, robot_namespace):
-    rospy.loginfo(f"{robot_namespace} Received measurement at Time: {msg.header.stamp.to_sec()}")
-    # Append data to global lists
-    time_stamps.append(msg.header.stamp.to_sec())
-    current_time = rospy.Time.now().to_sec()
-    sent_time = msg.header.stamp.to_sec()
-    latency = current_time - sent_time
+def pub_orchestrator(robot_namespace, topology, sent_path):
+    rospy.init_node("pub_orchestrator", anonymous=True)
 
-    latencies.append(latency)
-    rospy.loginfo(f"Latency: {latency:.3f} seconds")
+    # Setting publish topic
+    if topology == "a":
+        # Publisher for measurements
+        # Publish one's own topic
+        # Add / in front of topic name to specify global (absolute) topic name
+        pub = rospy.Publisher(f"/{robot_namespace}/data", ImageUUID, queue_size=10)
+    elif topology == "l":
+        pub = rospy.Publisher("/leader/data", ImageUUID, queue_size=10)
+    else:
+        raise ValueError(
+            f"Invalid topology '{topology}'. Expected 'a' for all-to-all or 'l' for leader."
+        )
 
-def pub_all_to_all(robot_namespace, num_robots):
-    rospy.init_node("pub_all_to_all", anonymous=True)
-    
-    # Publisher for measurements
-    pub = rospy.Publisher(f"/{robot_namespace}/data", Image, queue_size=10)
+    # After setting the topic above
+    # Publish message
 
-    robot_namespaces = [f"tb3_{i}" for i in range(int(num_robots))]
-    other_robot_namespaces = [ns for ns in robot_namespaces if ns != robot_namespace]
-
-    for other_robot_namespace in other_robot_namespaces:
-        # Subscriber for the other robot's measurements
-        rospy.Subscriber(f"/{other_robot_namespace}/data", Image, measurement_callback, robot_namespace)
-
-    rate = rospy.Rate(1)  # 1 Hz
+    bitrate = rospy.Rate(1)  # 1 Hz
 
     while not rospy.is_shutdown():
         # Generate a random bitmap as a numpy array
-        bitmap = np.random.choice([0, 255], size=(20, 20), p=[0.5, 0.5]).astype(np.uint8)
-        
-        # Create the Image message
-        msg = Image()
-        msg.header.stamp = rospy.Time.now()
-        msg.height = 20
-        msg.width = 20
-        msg.encoding = "mono8"
-        msg.is_bigendian = 0
-        msg.step = 20
-        msg.data = bitmap.tobytes()
+        bitmap = np.random.choice([0, 255], size=(20, 20), p=[0.5, 0.5]).astype(
+            np.uint8
+        )
+
+        # need message ID to uniquely identify
+        # Create the ImageUUID message
+        # Create the nested Image message part of ImageUUID
+        img = Image()
+        # img.header.stamp = rospy.Time.now().to_sec()
+        img.height = 20
+        img.width = 20
+        img.encoding = "mono8"
+        img.is_bigendian = 0
+        img.step = 20
+        img.data = bitmap.tobytes()
+
+        # Create the ImageUUID message and set its fields
+        msg = ImageUUID()
+        msg.header.stamp = (
+            rospy.Time.now()
+        )  # Copy the timestamp to the outer header for consistency
+        msg.image = img  # Set the Image message you just created
+        # Generate and set the UUID here if needed
+        msg.uuid = str(uuid.uuid4())
+
         pub.publish(msg)
 
-        rospy.loginfo(f"{robot_namespace} Published an image at Time: {msg.header.stamp.to_sec()}")
+        # Record sent
+        record = {
+            "uuid": msg.uuid,
+            "timestamp": msg.header.stamp.to_sec(),
+            "sender": robot_namespace,
+            # "Recipient": "all" if topology == "a" else "leader",
+        }
+        log_data(sent_path, robot_namespace, record)
 
-        rate.sleep()
+        # rospy.loginfo(
+        #     f"{robot_namespace} Published an image at Time: {msg.header.stamp.to_sec()}"
+        # )
+        # rospy.loginfo(f"Topology is set to: {topology}")
 
-def start_plotting(robot_namespace):
-    plt.figure()
-    ani = FuncAnimation(plt.gcf(), lambda frame: update_plot(frame, robot_namespace), interval=1000)
-    plt.show()
+        bitrate.sleep()
 
-def update_plot(frame, robot_namespace):
-    if time_stamps and latencies:
-        plt.cla()
-        plt.plot(time_stamps[-50:], latencies[-50:], label="Latency")
-        plt.xlabel('Time (s)')
-        plt.ylabel('Latency (s)')
-        plt.title(f'Real-time Latency Plot for {robot_namespace}')
-        plt.legend()
-        plt.tight_layout()
 
 if __name__ == "__main__":
     try:
         robot_namespace = rospy.myargv(argv=sys.argv)[1]
-        num_robots = rospy.myargv(argv=sys.argv)[2]
+        topology = rospy.myargv(argv=sys.argv)[2]
+        sent_path = rospy.myargv(argv=sys.argv)[3]
 
-        plotting_thread = threading.Thread(target=start_plotting, args=(robot_namespace,))
-        plotting_thread.start()
-
-        pub_all_to_all(robot_namespace, num_robots)
-
-        plotting_thread.join()
-
+        pub_orchestrator(robot_namespace, topology, sent_path)
     except rospy.ROSInterruptException:
         pass
     except IndexError:

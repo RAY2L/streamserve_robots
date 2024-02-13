@@ -22,3 +22,5 @@ Thumbs.db
 # Ignore other common directories not usually needed
 test_results/
 doc/
+
+env/

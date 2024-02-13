@@ -1,66 +1,112 @@
 #!/usr/bin/env python3
-import rospy
-from inter_robot_communication.msg import MeasurementStamped
+
+import sys
+import threading
+
+from log import log_data
+
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-import sys
+import rospy
+from sensor_msgs.msg import Image
+from inter_robot_communication.msg import ImageUUID
 
-# Store timestamps (as float) and latencies
+# Store timestamps (for plotting) and latencies (for latency calculations)
+time_stamps = []
 latencies = []
 
 
-def callback(data):
+# Callback function for the subscriber
+def receipt_callback(msg, args):
     current_time = rospy.Time.now().to_sec()
-    sent_time = data.header.stamp.to_sec()
+    robot_namespace, received_path = args
+
+    # Record received
+    record = {
+        "uuid": msg.uuid,
+        "timestamp": current_time,
+        "recipient": robot_namespace,
+    }
+    log_data(received_path, robot_namespace, record)
+
+    # rospy.loginfo(
+    #     f"{robot_namespace} Received measurement at Time: {msg.header.stamp.to_sec()}"
+    # )
+    # Append data to global lists
+    time_stamps.append(msg.header.stamp.to_sec())
+    sent_time = msg.header.stamp.to_sec()
     latency = current_time - sent_time
 
     latencies.append(latency)
-    rospy.loginfo("Latency: {:.3f} seconds".format(latency))
+    rospy.loginfo(f"Latency: {latency:.3f} seconds")
 
 
-def update_plot(frame):
-    plt.cla()
-    if latencies:
-        plt.plot(latencies, label="Latency")
+def sub_orchestrator(robot_namespace, num_robots, topology, received_path):
+    rospy.init_node("sub_orchestrator", anonymous=True)
 
-    # Average latencies
-    avg_latency = (
-        sum(latencies) / len(latencies) if latencies else 0
+    if topology == "a":
+        robot_namespaces = [f"tb3_{i}" for i in range(int(num_robots))]
+        other_robot_namespaces = [
+            ns for ns in robot_namespaces if ns != robot_namespace
+        ]
+
+        for other_robot_namespace in other_robot_namespaces:
+            # Subscriber for the other robot's measurements
+            rospy.Subscriber(
+                f"/{other_robot_namespace}/data",
+                ImageUUID,
+                receipt_callback,
+                callback_args=(robot_namespace, received_path),
+            )
+    elif topology == "l":
+        rospy.Subscriber(
+            "/leader/data",
+            ImageUUID,
+            receipt_callback,
+            callback_args=(robot_namespace, received_path),
+        )
+    else:
+        raise ValueError(
+            f"Invalid topology '{topology}'. Expected 'a' for all-to-all or 'l' for leader."
+        )
+
+
+def start_plotting(robot_namespace):
+    plt.figure()
+    ani = FuncAnimation(
+        plt.gcf(), lambda frame: update_plot(frame, robot_namespace), interval=1000
     )
-
-    # Annotate the plot with average latency values
-    plt.text(
-        0.5,
-        0.95,
-        f"Average Latency: {avg_latency:.6f} seconds",
-        transform=plt.gca().transAxes,
-        ha="center",
-        color="blue",
-    )
-
-    plt.xlabel("Message Count")
-    plt.ylabel("Latency (seconds)")
-    plt.title("Inter-Robot Communication Latency")
-    plt.legend()
+    plt.show()
 
 
-def listener(other_namespace):
-    rospy.Subscriber(f"/{other_namespace}/data", MeasurementStamped, callback)
-
-    plt.ion()
-    # real-time rendering of communication latency graph
-    ani = FuncAnimation(plt.gcf(), update_plot, interval=1000)  # Update every 1000 ms
-
-    plt.show(
-        block=True
-    )  # block=True makes sure the script waits until the plot is closed
+def update_plot(frame, robot_namespace):
+    if time_stamps and latencies:
+        plt.cla()
+        plt.plot(time_stamps[-50:], latencies[-50:], label="Latency")
+        plt.xlabel("Time (s)")
+        plt.ylabel("Latency (s)")
+        plt.title(f"Real-time Latency Plot for {robot_namespace}")
+        plt.legend()
+        plt.tight_layout()
 
 
 if __name__ == "__main__":
     try:
-        other_namespace = rospy.myargv(argv=sys.argv)[1]
-        listener(other_namespace)
+        robot_namespace = rospy.myargv(argv=sys.argv)[1]
+        num_robots = rospy.myargv(argv=sys.argv)[2]
+        topology = rospy.myargv(argv=sys.argv)[3]
+        received_path = rospy.myargv(argv=sys.argv)[4]
+
+        plotting_thread = threading.Thread(
+            target=start_plotting, args=(robot_namespace,)
+        )
+        plotting_thread.start()
+
+        sub_orchestrator(robot_namespace, num_robots, topology, received_path)
+
+        plotting_thread.join()
+
     except rospy.ROSInterruptException:
         pass
     except IndexError:
-        rospy.logerr("Usage: pub.py robot_namespace")
+        rospy.logerr("Usage: script.py robot_namespace num_robots")
