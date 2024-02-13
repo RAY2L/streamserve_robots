@@ -13,8 +13,7 @@ def log_data(path, robot_id, record):
     global log_lock
     with log_lock:
         rospy.loginfo(f"file path before: {path}")
-        # Move up three directories from the given path
-        # Expand the user's home directory and move up three directories from the given path
+        # Need to expand the user's home directory
         expanded_path = os.path.expanduser("~/streamserve_robots")
         new_base_path = os.path.abspath(os.path.join(expanded_path, path))
 

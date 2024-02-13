@@ -8,7 +8,6 @@ from log import log_data
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import rospy
-from sensor_msgs.msg import Image
 from inter_robot_communication.msg import ImageUUID
 
 # Store timestamps (for plotting) and latencies (for latency calculations)
@@ -32,7 +31,6 @@ def receipt_callback(msg, args):
     # rospy.loginfo(
     #     f"{robot_namespace} Received measurement at Time: {msg.header.stamp.to_sec()}"
     # )
-    # Append data to global lists
     time_stamps.append(msg.header.stamp.to_sec())
     sent_time = msg.header.stamp.to_sec()
     latency = current_time - sent_time
@@ -51,7 +49,7 @@ def sub_orchestrator(robot_namespace, num_robots, topology, received_path):
         ]
 
         for other_robot_namespace in other_robot_namespaces:
-            # Subscriber for the other robot's measurements
+            # Subscriber for the other robots' measurements
             rospy.Subscriber(
                 f"/{other_robot_namespace}/data",
                 ImageUUID,

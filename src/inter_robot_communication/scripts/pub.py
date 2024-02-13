@@ -16,7 +16,6 @@ def pub_orchestrator(robot_namespace, topology, sent_path):
 
     # Setting publish topic
     if topology == "a":
-        # Publisher for measurements
         # Publish one's own topic
         # Add / in front of topic name to specify global (absolute) topic name
         pub = rospy.Publisher(f"/{robot_namespace}/data", ImageUUID, queue_size=10)
@@ -38,11 +37,7 @@ def pub_orchestrator(robot_namespace, topology, sent_path):
             np.uint8
         )
 
-        # need message ID to uniquely identify
-        # Create the ImageUUID message
-        # Create the nested Image message part of ImageUUID
         img = Image()
-        # img.header.stamp = rospy.Time.now().to_sec()
         img.height = 20
         img.width = 20
         img.encoding = "mono8"
@@ -50,13 +45,11 @@ def pub_orchestrator(robot_namespace, topology, sent_path):
         img.step = 20
         img.data = bitmap.tobytes()
 
-        # Create the ImageUUID message and set its fields
         msg = ImageUUID()
-        msg.header.stamp = (
-            rospy.Time.now()
-        )  # Copy the timestamp to the outer header for consistency
-        msg.image = img  # Set the Image message you just created
-        # Generate and set the UUID here if needed
+        msg.header.stamp = rospy.Time.now()
+        msg.image = img
+        # Generate and set the UUID here
+        # need uuid to uniquely identify message later on
         msg.uuid = str(uuid.uuid4())
 
         pub.publish(msg)
@@ -66,7 +59,6 @@ def pub_orchestrator(robot_namespace, topology, sent_path):
             "uuid": msg.uuid,
             "timestamp": msg.header.stamp.to_sec(),
             "sender": robot_namespace,
-            # "Recipient": "all" if topology == "a" else "leader",
         }
         log_data(sent_path, robot_namespace, record)
 

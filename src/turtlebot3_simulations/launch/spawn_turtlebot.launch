@@ -10,10 +10,9 @@
         <!-- load in the robot model xml description -->
         <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find turtlebot3_simulations)/urdf/turtlebot3_waffle_modified.urdf.xacro'" />
         <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_$(arg robot_id) -x 0 -y 0 -z 0 -param robot_description" />
-        <!-- pub is used for all-to-all communication => use smthg else for leader node -->
-        <!-- pub orchestrator => give it the topology mode -->
+        <!-- pub -->
         <node name="pub" pkg="inter_robot_communication" type="pub.py" args="tb3_$(arg robot_id) $(arg topology) $(arg sent_path)" />
-        <!-- sub orchestrator => give it the topology mode -->
+        <!-- sub -->
         <node name="sub" pkg="inter_robot_communication" type="sub.py" args="tb3_$(arg robot_id) $(arg num_robots) $(arg topology) $(arg received_path)" />
     </group>
 </launch>
