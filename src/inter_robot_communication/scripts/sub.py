@@ -37,6 +37,7 @@ def receipt_callback(msg, args):
 
 def sub_orchestrator(robot_namespace, num_robots, topology, received_path):
     rospy.init_node("sub_orchestrator", anonymous=True)
+    # rospy.loginfo(f"topology is set to {topology}")
 
     if topology == "a":
         robot_namespaces = [f"tb3_{i}" for i in range(num_robots)]
@@ -53,6 +54,7 @@ def sub_orchestrator(robot_namespace, num_robots, topology, received_path):
                 callback_args=(robot_namespace, received_path),
             )
     elif topology == "l":
+        # rospy.loginfo("leader topology")
         rospy.Subscriber(
             "/leader/data",
             ImageUUID,
@@ -96,16 +98,19 @@ if __name__ == "__main__":
         graph = graph.lower() == "true"
 
         if graph:
-            plotting_thread = threading.Thread(
-                target=start_plotting, args=(robot_namespace,)
-            )
+            plotting_thread = threading.Thread(target=start_plotting, args=(robot_namespace,))
             plotting_thread.start()
 
-            sub_orchestrator(robot_namespace, num_robots, topology, received_path)
+        sub_orchestrator(robot_namespace, num_robots, topology, received_path)
 
+        # This will keep the main thread alive and process ROS callbacks.
+        rospy.spin()
+
+        # After rospy.spin() returns (which happens after a shutdown signal like Ctrl+C),
+        # join the plotting thread to ensure it has finished before the program completely exits.
+        if graph:
             plotting_thread.join()
-        else:
-            sub_orchestrator(robot_namespace, num_robots, topology, received_path)
+
 
     except rospy.ROSInterruptException:
         pass

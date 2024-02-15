@@ -6,7 +6,7 @@ import roslaunch
 
 
 parser = argparse.ArgumentParser(description="Launch multiple robots in ROS.")
-parser.add_argument("--launch", action="store_true")
+parser.add_argument("--launch", action="store_true") # needed?
 parser.add_argument(
     "--num_robots", type=int, default=1, help="Number of robots to spawn"
 )
