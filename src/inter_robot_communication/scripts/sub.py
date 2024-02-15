@@ -28,15 +28,11 @@ def receipt_callback(msg, args):
     }
     log_data(received_path, robot_namespace, record)
 
-    # rospy.loginfo(
-    #     f"{robot_namespace} Received measurement at Time: {msg.header.stamp.to_sec()}"
-    # )
-    time_stamps.append(msg.header.stamp.to_sec())
+    time_stamps.append(msg.header.stamp.to_nsec())
     sent_time = msg.header.stamp.to_sec()
     latency = current_time - sent_time
 
     latencies.append(latency)
-    rospy.loginfo(f"Latency: {latency:.3f} seconds")
 
 
 def sub_orchestrator(robot_namespace, num_robots, topology, received_path):
@@ -72,7 +68,7 @@ def sub_orchestrator(robot_namespace, num_robots, topology, received_path):
 def start_plotting(robot_namespace):
     plt.figure()
     ani = FuncAnimation(
-        plt.gcf(), lambda frame: update_plot(frame, robot_namespace), interval=1000
+        plt.gcf(), lambda frame: update_plot(frame, robot_namespace), interval=100
     )
     plt.show()
 
@@ -94,15 +90,21 @@ if __name__ == "__main__":
         num_robots = rospy.myargv(argv=sys.argv)[2]
         topology = rospy.myargv(argv=sys.argv)[3]
         received_path = rospy.myargv(argv=sys.argv)[4]
+        graph = rospy.myargv(argv=sys.argv)[5]
+        # Turn graph to boolean
+        graph = graph.lower() == "true"
 
-        plotting_thread = threading.Thread(
-            target=start_plotting, args=(robot_namespace,)
-        )
-        plotting_thread.start()
+        if graph:
+            plotting_thread = threading.Thread(
+                target=start_plotting, args=(robot_namespace,)
+            )
+            plotting_thread.start()
 
-        sub_orchestrator(robot_namespace, num_robots, topology, received_path)
+            sub_orchestrator(robot_namespace, num_robots, topology, received_path)
 
-        plotting_thread.join()
+            plotting_thread.join()
+        else:
+            sub_orchestrator(robot_namespace, num_robots, topology, received_path)
 
     except rospy.ROSInterruptException:
         pass

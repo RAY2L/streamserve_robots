@@ -5,6 +5,7 @@
     <arg name="topology" default="a"/>
     <arg name="sent_path"/>
     <arg name="received_path"/>
+    <arg name="graph"/>
 
     <group ns="tb3_$(arg robot_id)">
         <!-- load in the robot model xml description -->
@@ -13,6 +14,6 @@
         <!-- pub -->
         <node name="pub" pkg="inter_robot_communication" type="pub.py" args="tb3_$(arg robot_id) $(arg topology) $(arg sent_path)" />
         <!-- sub -->
-        <node name="sub" pkg="inter_robot_communication" type="sub.py" args="tb3_$(arg robot_id) $(arg num_robots) $(arg topology) $(arg received_path)" />
+        <node name="sub" pkg="inter_robot_communication" type="sub.py" args="tb3_$(arg robot_id) $(arg num_robots) $(arg topology) $(arg received_path) $(arg graph)" />
     </group>
 </launch>

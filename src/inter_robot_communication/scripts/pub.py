@@ -57,7 +57,7 @@ def pub_orchestrator(robot_namespace, topology, sent_path):
         # Record sent
         record = {
             "uuid": msg.uuid,
-            "timestamp": msg.header.stamp.to_sec(),
+            "timestamp": msg.header.stamp.to_nsec(),
             "sender": robot_namespace,
         }
         log_data(sent_path, robot_namespace, record)

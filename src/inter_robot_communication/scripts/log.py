@@ -10,7 +10,7 @@ log_lock = threading.Lock()
 
 
 def log_data(path, robot_id, record):
-    rospy.loginfo(f"file path before: {path}")
+    # rospy.loginfo(f"file path before: {path}")
     # Need to expand the user's home directory
     expanded_path = os.path.expanduser("~/streamserve_robots")
     new_base_path = os.path.abspath(os.path.join(expanded_path, path))
@@ -18,7 +18,7 @@ def log_data(path, robot_id, record):
     # Construct the full file path with the new base path
     file_path = os.path.join(new_base_path, f"robot_{robot_id}.csv")
 
-    rospy.loginfo(f"file path after: {file_path}")
+    # rospy.loginfo(f"file path after: {file_path}")
     
     global log_lock
     with log_lock:

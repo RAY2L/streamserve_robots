@@ -16,6 +16,10 @@ parser.add_argument(
     default="a",
     help="Topology: (a) all-to-all or (l) leader-follower",
 )
+parser.add_argument(
+    "--bitrate", type=int, default=1, help="Bitrate"
+)
+parser.add_argument("--graph", action="store_true")
 args = parser.parse_args()
 
 
@@ -59,6 +63,7 @@ robot_cli_args = [
         f"topology:={args.topology}",
         f"sent_path:={sent_path}",
         f"received_path:={received_path}",
+        f"graph:={args.graph}",
     ]
     for i in range(args.num_robots)
 ]
