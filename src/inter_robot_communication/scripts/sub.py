@@ -103,7 +103,8 @@ if __name__ == "__main__":
 
         sub_orchestrator(robot_namespace, num_robots, topology, received_path)
 
-        # This will keep the main thread alive and process ROS callbacks.
+        # This will keep the current thread (main or plotting) alive and process ROS callbacks.
+        # keep this thread active so that this thread can continuously receive and process messages from sub'd topics
         rospy.spin()
 
         # After rospy.spin() returns (which happens after a shutdown signal like Ctrl+C),
