@@ -30,6 +30,7 @@ parser.add_argument(
     default=[20, 20],
     help="Image resolution (width, height)",
 )
+parser.add_argument("--in_jpg", action="store_true", help="Compress images to jpeg")
 parser.add_argument("--graph", action="store_true", help="Graph the logged data")
 args = parser.parse_args()
 
@@ -59,6 +60,7 @@ if args.launch:
             f"bitrate:={args.bitrate}",
             f"bitrate_random:={args.bitrate_random}",
             f"resolution:={','.join(map(str, args.resolution))}",
+            f"in_jpg:={args.in_jpg}",
             f"sent_path:={sent_path}",
             f"received_path:={received_path}",
             f"graph:={args.graph}",

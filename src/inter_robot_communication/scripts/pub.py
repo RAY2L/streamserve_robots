@@ -2,17 +2,19 @@
 
 import sys
 import uuid
+import io
 
 from log import log_data
 
 import rospy
 from inter_robot_communication.msg import ImageUUID
+from PIL import Image as PILImage
 from sensor_msgs.msg import Image
 import numpy as np
 
 
 def pub_orchestrator(
-    robot_namespace, topology, sent_path, bitrate, bitrate_random, resolution
+    robot_namespace, topology, sent_path, bitrate, bitrate_random, resolution, in_jpg
 ):
     width, height = resolution
 
@@ -36,18 +38,26 @@ def pub_orchestrator(
     # bitrate = rospy.Rate(bitrate)  # 1 Hz
 
     while not rospy.is_shutdown():
-        # Generate a random bitmap as a numpy array
-        bitmap = np.random.choice([0, 255], size=(20, 20), p=[0.5, 0.5]).astype(
-            np.uint8
-        )
+        # Generate an all-black bitmap as a numpy array
+        bitmap = np.zeros((height, width), dtype=np.uint8)
 
-        img = Image()
-        img.height = height
-        img.width = width
-        img.encoding = "mono8"
-        img.is_bigendian = 0
-        img.step = 20
-        img.data = bitmap.tobytes()
+        if in_jpg:
+            # Use PIL to create an image from the numpy array and compress it to JPEG
+            pil_img = PILImage.fromarray(bitmap)
+            buf = io.BytesIO()
+            pil_img.save(buf, format="JPEG")
+            jpeg_data = buf.getvalue()
+            img.data = jpeg_data
+            img.encoding = "jpeg"
+            img.step = 0  # In JPEG compressed data, step is not used
+        else:
+            img = Image()
+            img.height = height
+            img.width = width
+            img.encoding = "mono8"
+            img.is_bigendian = 0
+            img.step = width
+            img.data = bitmap.tobytes()
 
         msg = ImageUUID()
         msg.header.stamp = rospy.Time.now()
@@ -93,9 +103,11 @@ if __name__ == "__main__":
         bitrate_random = rospy.myargv(argv=sys.argv)[5]
         resolution = rospy.myargv(argv=sys.argv)[6]
         width, height = map(int, resolution.split(","))
+        in_jpg = rospy.myargv(argv=sys.argv)[7]
 
         # Turn to boolean
         bitrate_random = bitrate_random.lower() == "true"
+        in_jpg = in_jpg.lower() == "true"
 
         pub_orchestrator(
             robot_namespace,
@@ -104,6 +116,7 @@ if __name__ == "__main__":
             bitrate,
             bitrate_random,
             (width, height),
+            in_jpg,
         )
     except rospy.ROSInterruptException:
         pass

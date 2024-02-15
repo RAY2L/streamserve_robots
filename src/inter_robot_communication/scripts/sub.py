@@ -91,7 +91,8 @@ if __name__ == "__main__":
         topology = rospy.myargv(argv=sys.argv)[3]
         received_path = rospy.myargv(argv=sys.argv)[4]
         graph = rospy.myargv(argv=sys.argv)[5]
-        # Turn graph to boolean
+
+        # Turn to boolean
         graph = graph.lower() == "true"
 
         if graph:
