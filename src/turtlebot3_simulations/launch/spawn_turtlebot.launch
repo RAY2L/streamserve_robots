@@ -6,6 +6,7 @@
     <arg name="sent_path"/>
     <arg name="received_path"/>
     <arg name="graph"/>
+    <arg name="analysis"/>
 
     <group ns="tb3_$(arg robot_id)">
         <!-- load in the robot model xml description -->

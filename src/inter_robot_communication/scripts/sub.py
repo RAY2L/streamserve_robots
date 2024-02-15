@@ -17,20 +17,20 @@ latencies = []
 
 # Callback function for the subscriber
 def receipt_callback(msg, args):
-    current_time = rospy.Time.now().to_sec()
+    current_time = rospy.Time.now()
     robot_namespace, received_path = args
 
     # Record received
     record = {
         "uuid": msg.uuid,
-        "timestamp": current_time,
+        "timestamp": current_time.to_nsec(),
         "recipient": robot_namespace,
     }
     log_data(received_path, robot_namespace, record)
 
     time_stamps.append(msg.header.stamp.to_nsec())
     sent_time = msg.header.stamp.to_sec()
-    latency = current_time - sent_time
+    latency = current_time.to_sec() - sent_time
 
     latencies.append(latency)
 
