@@ -1,12 +1,10 @@
 import argparse
 
-from analysis import analysis_orchestrator
 from utils import initialize_logging_dirs
 
 import roslaunch
 
 
-# Parse command-line arguments
 parser = argparse.ArgumentParser(description="Launch multiple robots in ROS.")
 parser.add_argument("--launch", action="store_true")
 parser.add_argument(
@@ -20,19 +18,27 @@ parser.add_argument(
     help="Topology: (a) all-to-all or (l) leader-follower",
 )
 parser.add_argument("--bitrate", type=int, default=1, help="Bitrate")
+parser.add_argument(
+    "--bitrate_random",
+    action="store_true",
+    help="Toggle random average bitrate",
+)
+parser.add_argument(
+    "--resolution",
+    type=int,
+    nargs=2,
+    default=[20, 20],
+    help="Image resolution (width, height)",
+)
 parser.add_argument("--graph", action="store_true", help="Graph the logged data")
-parser.add_argument("--analysis", type=str, help="Graph analysis")
 args = parser.parse_args()
 
-
-if args.analysis:
-    analysis_orchestrator(args.analysis)
 
 if args.launch:
     base_path, sent_path, received_path = initialize_logging_dirs(args.num_robots)
 
     # Initialize ROS launch
-    # Generate uuid for
+    # Generate uuid for this launch session
     uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
     roslaunch.configure_logging(uuid)
 
@@ -50,10 +56,12 @@ if args.launch:
             f"robot_id:={i}",
             f"num_robots:={args.num_robots}",
             f"topology:={args.topology}",
+            f"bitrate:={args.bitrate}",
+            f"bitrate_random:={args.bitrate_random}",
+            f"resolution:={','.join(map(str, args.resolution))}",
             f"sent_path:={sent_path}",
             f"received_path:={received_path}",
             f"graph:={args.graph}",
-            f"analysis:={args.analysis}",
         ]
         for i in range(args.num_robots)
     ]

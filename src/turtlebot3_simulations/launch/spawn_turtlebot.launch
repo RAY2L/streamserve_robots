@@ -1,8 +1,11 @@
 <launch>
     <!-- don't need arg tags? -->
     <arg name="robot_id"/>
-    <arg name="num_robots" default="3"/>
-    <arg name="topology" default="a"/>
+    <arg name="num_robots"/>
+    <arg name="topology"/>
+    <arg name="bitrate"/>
+    <arg name="bitrate_random"/>
+    <arg name="resolution"/>
     <arg name="sent_path"/>
     <arg name="received_path"/>
     <arg name="graph"/>
@@ -13,7 +16,7 @@
         <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find turtlebot3_simulations)/urdf/turtlebot3_waffle_modified.urdf.xacro'" />
         <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf" args="-urdf -model tb3_$(arg robot_id) -x 0 -y 0 -z 0 -param robot_description" />
         <!-- pub -->
-        <node name="pub" pkg="inter_robot_communication" type="pub.py" args="tb3_$(arg robot_id) $(arg topology) $(arg sent_path)" />
+        <node name="pub" pkg="inter_robot_communication" type="pub.py" args="tb3_$(arg robot_id) $(arg topology) $(arg sent_path) $(arg bitrate) $(arg bitrate_random) $(arg resolution)" />
         <!-- sub -->
         <node name="sub" pkg="inter_robot_communication" type="sub.py" args="tb3_$(arg robot_id) $(arg num_robots) $(arg topology) $(arg received_path) $(arg graph)" />
     </group>

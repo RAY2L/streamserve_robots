@@ -39,7 +39,7 @@ def sub_orchestrator(robot_namespace, num_robots, topology, received_path):
     rospy.init_node("sub_orchestrator", anonymous=True)
 
     if topology == "a":
-        robot_namespaces = [f"tb3_{i}" for i in range(int(num_robots))]
+        robot_namespaces = [f"tb3_{i}" for i in range(num_robots)]
         other_robot_namespaces = [
             ns for ns in robot_namespaces if ns != robot_namespace
         ]
@@ -87,7 +87,7 @@ def update_plot(frame, robot_namespace):
 if __name__ == "__main__":
     try:
         robot_namespace = rospy.myargv(argv=sys.argv)[1]
-        num_robots = rospy.myargv(argv=sys.argv)[2]
+        num_robots = int(rospy.myargv(argv=sys.argv)[2])
         topology = rospy.myargv(argv=sys.argv)[3]
         received_path = rospy.myargv(argv=sys.argv)[4]
         graph = rospy.myargv(argv=sys.argv)[5]

@@ -2,10 +2,9 @@ import os
 import pandas as pd
 import threading
 
-import rospy
-
 
 # Create a global lock
+# Should it be inside log_data or outside it?
 log_lock = threading.Lock()
 
 
@@ -19,7 +18,7 @@ def log_data(path, robot_id, record):
     file_path = os.path.join(new_base_path, f"robot_{robot_id}.csv")
 
     # rospy.loginfo(f"file path after: {file_path}")
-    
+
     global log_lock
     with log_lock:
         # Check if the file is empty to write headers

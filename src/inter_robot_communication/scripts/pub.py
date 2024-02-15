@@ -11,7 +11,11 @@ from sensor_msgs.msg import Image
 import numpy as np
 
 
-def pub_orchestrator(robot_namespace, topology, sent_path):
+def pub_orchestrator(
+    robot_namespace, topology, sent_path, bitrate, bitrate_random, resolution
+):
+    width, height = resolution
+
     rospy.init_node("pub_orchestrator", anonymous=True)
 
     # Setting publish topic
@@ -29,7 +33,7 @@ def pub_orchestrator(robot_namespace, topology, sent_path):
     # After setting the topic above
     # Publish message
 
-    bitrate = rospy.Rate(1)  # 1 Hz
+    # bitrate = rospy.Rate(bitrate)  # 1 Hz
 
     while not rospy.is_shutdown():
         # Generate a random bitmap as a numpy array
@@ -38,8 +42,8 @@ def pub_orchestrator(robot_namespace, topology, sent_path):
         )
 
         img = Image()
-        img.height = 20
-        img.width = 20
+        img.height = height
+        img.width = width
         img.encoding = "mono8"
         img.is_bigendian = 0
         img.step = 20
@@ -66,8 +70,18 @@ def pub_orchestrator(robot_namespace, topology, sent_path):
         #     f"{robot_namespace} Published an image at Time: {msg.header.stamp.to_sec()}"
         # )
         # rospy.loginfo(f"Topology is set to: {topology}")
+        # rospy.loginfo(f"bitrate is set to: {bitrate}")
+        # rospy.loginfo(f"resolution is set to: {resolution}")
+        # rospy.loginfo(f"type(resolution) is set to: {type(resolution)}")
 
-        bitrate.sleep()
+        if bitrate_random:
+            # Use an exponential distribution if bitrate_random is True
+            current_bitrate = np.random.exponential(bitrate)
+            rate = rospy.Rate(current_bitrate)  # Using the randomly generated bitrate
+        else:
+            rate = rospy.Rate(bitrate)  # Using the fixed bitrate
+
+        rate.sleep()
 
 
 if __name__ == "__main__":
@@ -75,8 +89,22 @@ if __name__ == "__main__":
         robot_namespace = rospy.myargv(argv=sys.argv)[1]
         topology = rospy.myargv(argv=sys.argv)[2]
         sent_path = rospy.myargv(argv=sys.argv)[3]
+        bitrate = int(rospy.myargv(argv=sys.argv)[4])
+        bitrate_random = rospy.myargv(argv=sys.argv)[5]
+        resolution = rospy.myargv(argv=sys.argv)[6]
+        width, height = map(int, resolution.split(","))
 
-        pub_orchestrator(robot_namespace, topology, sent_path)
+        # Turn to boolean
+        bitrate_random = bitrate_random.lower() == "true"
+
+        pub_orchestrator(
+            robot_namespace,
+            topology,
+            sent_path,
+            bitrate,
+            bitrate_random,
+            (width, height),
+        )
     except rospy.ROSInterruptException:
         pass
     except IndexError:

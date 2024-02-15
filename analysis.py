@@ -1,3 +1,4 @@
+import argparse
 import glob
 import os
 
@@ -15,9 +16,6 @@ def generate_dataframes(csv_files):
         dfs[i] = df
 
     return dfs
-
-
-# def combine_send():
 
 
 def get_files(base_path):
@@ -65,4 +63,11 @@ def analysis_orchestrator(logs_path):
 
 
 if __name__ == "__main__":
-    analysis_orchestrator("logs/2024-02-14_02-29-51")
+    parser = argparse.ArgumentParser(description="Run offline analysis on logs data")
+    parser.add_argument("--logs_path", type=str, help="Logs data path")
+    args = parser.parse_args()
+
+    if args.logs_path:
+        analysis_orchestrator(args.logs_path)
+    else:
+        print("No logs path provided.")
