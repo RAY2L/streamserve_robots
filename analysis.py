@@ -23,16 +23,41 @@ def get_files(base_path):
     return sent_csv_files, rcvd_csv_files
 
 
+def calculate_drop_rate(sent_dfs, rcvd_dfs):
+    drop_rate_data = []
+
+    for sent_df in sent_dfs:
+        sender = sent_df['sender'].iloc[0]
+        total_sent = len(sent_df)
+        if any(rcvd_df['recipient'].iloc[0] == sender for rcvd_df in rcvd_dfs):
+            rcvd_df = next(rcvd_df for rcvd_df in rcvd_dfs if rcvd_df['recipient'].iloc[0] == sender)
+            total_rcvd = len(rcvd_df)
+        else:
+            total_rcvd = 0
+        dropped = total_sent - total_rcvd
+        drop_rate = dropped / total_sent if total_sent > 0 else 0
+
+        drop_rate_data.append({
+            'sender': sender,
+            'total_sent': total_sent,
+            'total_rcvd': total_rcvd,
+            'dropped': dropped,
+            'drop_rate': drop_rate
+        })
+
+    return pd.DataFrame(drop_rate_data)
+
+
 def analysis_orchestrator(logs_path, plot_graphs):
     sent_csv_files, rcvd_csv_files = get_files(logs_path)
-    sent_dfs, rcvd_dfs = generate_dataframes(sent_csv_files), generate_dataframes(rcvd_csv_files)
+    sent_dfs_arr, rcvd_dfs_arr = generate_dataframes(sent_csv_files), generate_dataframes(rcvd_csv_files)
 
-    sent_dfs = pd.concat(sent_dfs)
+    sent_dfs = pd.concat(sent_dfs_arr)
 
     # Initialize an empty list to store aggregate statistics dictionaries
     aggregate_stats_data = []
 
-    for idx, rcvd_df in enumerate(rcvd_dfs):
+    for idx, rcvd_df in enumerate(rcvd_dfs_arr):
         joined_df = pd.merge(sent_dfs, rcvd_df, on="uuid", how="inner")
         df_sorted = joined_df.sort_values(by="timestamp_x")
         latency = df_sorted["timestamp_y"] - df_sorted["timestamp_x"]
@@ -80,6 +105,9 @@ def analysis_orchestrator(logs_path, plot_graphs):
 
     # Print aggregate statistics without the index column
     print(aggregate_stats.to_string(index=False))
+    print(type(sent_dfs_arr[0]))  # This should output <class 'pandas.core.frame.DataFrame'>
+    drop_rate_df = calculate_drop_rate(sent_dfs_arr, rcvd_dfs_arr)
+    print(drop_rate_df.to_string(index=False))
 
 
 if __name__ == "__main__":
