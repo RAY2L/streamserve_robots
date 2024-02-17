@@ -41,6 +41,10 @@ def pub_orchestrator(
         # Generate an all-black bitmap as a numpy array
         bitmap = np.zeros((height, width), dtype=np.uint8)
 
+        img = Image()
+        img.height = height
+        img.width = width
+
         if in_jpg:
             # Use PIL to create an image from the numpy array and compress it to JPEG
             pil_img = PILImage.fromarray(bitmap)
@@ -51,9 +55,6 @@ def pub_orchestrator(
             img.encoding = "jpeg"
             img.step = 0  # In JPEG compressed data, step is not used
         else:
-            img = Image()
-            img.height = height
-            img.width = width
             img.encoding = "mono8"
             img.is_bigendian = 0
             img.step = width
