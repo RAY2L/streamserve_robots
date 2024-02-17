@@ -7,6 +7,7 @@ from log import log_data
 
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+import numpy as np
 import rospy
 from inter_robot_communication.msg import ImageUUID
 
@@ -77,13 +78,34 @@ def start_plotting(robot_namespace):
 
 def update_plot(frame, robot_namespace):
     if time_stamps and latencies:
-        plt.cla()
-        plt.plot(time_stamps[-50:], latencies[-50:], label="Latency")
+        plt.cla()  # Clear the current axes
+
+        # Convert time_stamps from nanoseconds to seconds for plotting
+        time_stamps_sec = [ts / 1e9 for ts in time_stamps[-50:]]  # Last 50 time stamps
+
+        plt.plot(time_stamps_sec, latencies[-50:], label="Latency")  # Plot the last 50 latencies
         plt.xlabel("Time (s)")
         plt.ylabel("Latency (s)")
         plt.title(f"Real-time Latency Plot for {robot_namespace}")
         plt.legend()
         plt.tight_layout()
+
+        # Calculate aggregate statistics for the last 50 latencies
+        mean_latency = np.mean(latencies[-50:])
+        median_latency = np.median(latencies[-50:])
+        max_latency = np.max(latencies[-50:])
+        min_latency = np.min(latencies[-50:])
+        std_latency = np.std(latencies[-50:])
+        n = len(latencies)
+
+        # Position for the stats text; adjust as needed
+        text_x = time_stamps_sec[0]
+        text_y = max(latencies[-50:]) * 0.8  # Position text at 80% of the max latency
+
+        # Format the stats text
+        stats_text = f'Mean: {mean_latency:.3f}s\nMedian: {median_latency:.3f}s\nMax: {max_latency:.3f}s\nMin: {min_latency:.3f}s\nStd: {std_latency:.3f}s\nn: {n}'
+
+        plt.text(text_x, text_y, stats_text, fontsize=9, verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
 
 
 if __name__ == "__main__":
