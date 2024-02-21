@@ -80,7 +80,7 @@ def pub_orchestrator(
         # rospy.loginfo(
         #     f"{robot_namespace} Published an image at Time: {msg.header.stamp.to_sec()}"
         # )
-        rospy.loginfo(f"Topology is set to: {topology}")
+        # rospy.loginfo(f"Topology is set to: {topology}")
         # rospy.loginfo(f"bitrate is set to: {bitrate}")
         # rospy.loginfo(f"resolution is set to: {resolution}")
         # rospy.loginfo(f"type(resolution) is set to: {type(resolution)}")

@@ -36,7 +36,7 @@ args = parser.parse_args()
 
 
 if args.launch:
-    base_path, sent_path, received_path = initialize_logging_dirs(args.num_robots)
+    base_path, sent_path, received_path = initialize_logging_dirs(args)
 
     # Initialize ROS launch
     # Generate uuid for this launch session
