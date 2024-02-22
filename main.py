@@ -6,7 +6,13 @@ import roslaunch
 
 
 parser = argparse.ArgumentParser(description="Launch multiple robots in ROS.")
-parser.add_argument("--launch", action="store_true") # needed?
+parser.add_argument(
+    "--network",
+    type=str,
+    choices=["l", "r"],
+    default="l",
+    help="Network: (l) local or (r) remote",
+)
 parser.add_argument(
     "--num_robots", type=int, default=1, help="Number of robots to spawn"
 )
@@ -35,7 +41,7 @@ parser.add_argument("--graph", action="store_true", help="Graph the logged data"
 args = parser.parse_args()
 
 
-if args.launch:
+if args.network == "l":
     base_path, sent_path, received_path = initialize_logging_dirs(args.num_robots)
 
     # Initialize ROS launch
@@ -97,3 +103,5 @@ if args.launch:
     finally:
         # Shutdown all launched nodes and cleanup
         parent.shutdown()
+elif args.network == "r":
+    
