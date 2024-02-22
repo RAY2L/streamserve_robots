@@ -41,8 +41,8 @@ parser.add_argument("--graph", action="store_true", help="Graph the logged data"
 args = parser.parse_args()
 
 
-if args.network == "l":
-    base_path, sent_path, received_path = initialize_logging_dirs(args.num_robots)
+if args.launch:
+    base_path, sent_path, received_path = initialize_logging_dirs(args)
 
     # Initialize ROS launch
     # Generate uuid for this launch session
@@ -103,5 +103,4 @@ if args.network == "l":
     finally:
         # Shutdown all launched nodes and cleanup
         parent.shutdown()
-elif args.network == "r":
-    
+# elif args.network == "r":
